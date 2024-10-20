@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style>
+        div#messages_container
+        {
+            background-color: transparent; box-shadow: inset 0 0 10px deepskyblue; border: none; margin-left: 25%;
+            margin-top: 5%; width: 50%; height: 1000px; overflow-y: scroll;
+            border-radius: 2%;
+        }
+        div.message
+        {
+            float: top; width: 90%; margin-left: 5%;margin-top: 2%;background-color: deepskyblue; box-shadow: 5px 5px 5px deepskyblue;
+            height: 10%;color: whitesmoke; font-family: Serif; font-size: calc(1vw + 1vh);
+            border: none; border-radius: 1%;
+        }
+        div.post_forward
+        {
+            float: top; width: 90%; margin-left: 5%;margin-top: 2%;background-color: deepskyblue; box-shadow: 5px 5px 5px deepskyblue;
+            height: 30%;color: whitesmoke; font-family: Serif; font-size: calc(1vw + 1vh);
+            border: none; border-radius: 1%; position: relative;
+        }
+        .post_forward>p
+        {
+            position: absolute; bottom: 0; word-wrap: break-word;border: none;
+            box-shadow: inset 0 0 6px lightgray; background-color: transparent;
+            width: 90%; right: 5%; height: 30%;
+            font-size: 100%;
+        }
+        .post_forward>img
+        {
+            position: absolute;top:0;right: 10%;width: 80%;height: 60%;
+        }
+        #id_sent_by
+        {
+            display: none;
+
+        }
+        #id_parent_list
+        {
+            display: none;
+
+        }
+        .groups_list
+        {
+            position: absolute;
+            background-color: lightblue; box-shadow: inset 0 0 10px deepskyblue; border: none; left: 0%;
+            top:6%; width: 24%; height: 1000px; overflow-y: scroll;
+            border-radius: 2%;
+        }
+        .groups_list>div
+        {
+            float: top; width: 100%; height: 30px; text-align: center; font-size: 100%;
+            border: none; background-color: transparent; border-bottom: darkblue 1px solid;
+            margin-top: 0.5%;
+            transition: all 1s ease;
+
+        }
+        .groups_list>div:hover
+        {
+            float: top; width: 100%; height: 30px; text-align: center; font-size: 100%;
+            border: none; background-color: dodgerblue; border-bottom: darkblue 1px solid;
+            margin-top: 0.5%; cursor: pointer;
+            transition: all 1s ease;
+
+        }
+         #messages_container>div.groups
+         {
+             display: none;
+             position: absolute;top:0;right: 0;
+             background-color: transparent; height:calc(100%);width: calc(100%);
+         }
+    </style>
+</head>
+<body style=" background-color: #002438">
+{% include 'Header.html' %}
+<script>
+    function display_group(group_name)
+    {
+        const container=document.getElementById('messages_container');
+        const divs=container.querySelectorAll('.groups');
+        const target_gr=document.getElementById('target_group');
+        target_gr.value=group_name;
+        for(const div of divs)
+        {
+            div.style.display = div.id === group_name ?'block':'none';
+        }
+    }
+    function send_message(form)
+    {
+        const frm_data=new FormData(form.parentElement);
+        $.ajax({
+            type:'POST',
+            url:'{% url 'send_new_message' %}',
+            data:frm_data,
+            headers:{
+                'X-csrftoken':form.parentElement.querySelector('[name="csrfmiddlewaretoken"]').value
+            }
+            ,processData:false,
+            contentType:false
+        }).then(res=>{
+            if(res.status === 'succeed')
+            {
+                sockets[frm_data.get('group_title')].send(JSON.stringify({'to_do':'send_message','message':frm_data.get('message_text'),'group_name':
+                frm_data.get('group_title'),'username':'{{ user.username }}'}))
+            }
+        })
+
+    }
+    const sockets={};
+    function make_new_socket(group_name)
+    {
+         const group_socket=new WebSocket(
+             'ws://'+window.location.host+
+             '/ws/group_socket/'+group_name+'/'
+
+         );
+         group_socket.onopen=function (){console.log('connected to'+group_name)}
+        group_socket.onmessage=function (data){
+             const decoded=JSON.parse(data.data);
+          const parent= document.getElementById('messages_container').querySelector(`#${decoded.group_name}`);
+          const msg=document.createElement('div'); msg.className='message';
+          msg.innerHTML=`${decoded.username} said : <br> ${decoded.message}`;
+          parent.appendChild(msg);
+
+         }
+         sockets[group_name]=group_socket;
+    }
+    function mark_as_read(element)
+         {
+             const type=element.getAttribute('data-mtype');
+             const id=element.getAttribute('data-mesid');
+             console.log(id)
+             const frmdata=new FormData(); frmdata.append('m_id',id);
+             frmdata.append('m_type',type);
+
+             const ajax={
+                 url:'{% url 'mark_as_seen' %}',
+                 type:'POST',data:frmdata,headers:{'X-csrftoken':token},contentType:false,processData:false
+             }
+             $.ajax(ajax).then(res=>{
+                 if(res.status=='failure')
+                 {
+                     mark_as_read(element);
+
+                 }
+                 else
+                 {
+
+                 }
+
+             });
+         }
+          const observer=new IntersectionObserver((entries,observer) => {
+             entries.forEach(entry=>{
+                 if(entry.isIntersecting)
+                 {
+                      mark_as_read(entry.target)
+
+                     observer.unobserve(entry.target);
+                 }
+             })
+         });
+         const option={
+             root:null,
+             rootMargin: '0px',
+             threshold:1
+         }
+         function observer_element(element)
+         {
+             observer.observe(element);
+         }
+</script>
+<div class="groups_list">
+{% for group in groups %}
+    <div onclick="display_group('{{ group.title }}')">
+    {{ group.title }}
+        {{ group.count }}
+    <script>
+        make_new_socket('{{ group.title }}')
+    </script>
+    </div>
+
+    {% endfor %}
+</div>
+<div id="messages_container" style="position: relative">
+
+
+  {% for group in groups %}
+     <div class="groups" id="{{ group.title }}">
+     {% for message in group.get_messages %}
+         {% if message.main_text %}
+              <!-- if message is  seen by user !-->
+             {% if user in message.seen_list.users %}
+        <div class="message" >
+        {{ message.sent_by.username }} said :
+        <br>
+        {{ message.main_text }}
+    </div>
+                 {% else %}
+                  <!-- if message is  not seen by user !-->
+                 <div class="message"  name="quened" data-mesid="{{ message.id }}" data-mtype="message">
+        {{ message.sent_by.username }} said :
+        <br>
+        {{ message.main_text }}
+    </div>
+                 {% endif %}
+         {% else %}
+              <!-- if post forward is  seen by user !-->
+              {% if user in message.seen_list.users %}
+
+          <div class="post_forward" >
+          <img src="{{ message.post.get_thumbnail }}">
+           <p>
+               {{ message.post.caption }}
+           </p>
+          </div>
+                  <!-- if post forward is not seen by user !-->
+                  {% else %}
+                  <div class="post_forward"  name="quened" data-mesid="{{ message.id }}" data-mtype="forward">
+          <img src="{{ message.post.get_thumbnail }}">
+           <p>
+               {{ message.post.caption }}
+           </p>
+          </div>
+
+
+                  {% endif %}
+
+         {% endif %}
+         {% endfor %}
+      </div>
+   {% endfor %}
+
+</div>
+<form style="position: fixed;bottom: 0;width: 90%;left: 5%">
+    <button style="position: absolute;right: 0;height: 88%" onclick="send_message(this);event.preventDefault()">
+        Send
+    </button>
+    {% csrf_token %}
+   <textarea style="outline: none;border-radius: 1%;box-shadow: inset 0 0 yellow;width: 100%" name="message_text"></textarea>
+    <input type="text" style="display: none" name="group_title" id="target_group" value="">
+</form>
+<script>
+    const to_observes=document.getElementsByName('quened');
+    to_observes.forEach(el=>{
+
+        observer_element(el);
+    })
+    const token=document.getElementsByName('csrfmiddlewaretoken')[0].value;
+   // const quened_messages=[];
+</script>
+</body>
+</html>

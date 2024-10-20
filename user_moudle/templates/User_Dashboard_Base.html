@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ title }}</title>
+    <style>
+        form
+        {
+            background-color: lightgrey;border: none; border-radius: 1.5%; box-shadow: 5px 5px 5px grey;
+            position: fixed;top:18%;right: 36%;
+            height:60% ; width: 30%; text-align: center;
+        }
+        #my_block_list
+        {
+            background-color: lightgrey;border: none; border-radius: 1.5%; box-shadow: 5px 5px 5px grey;
+            position: fixed;top:18%;right: 36%;
+            height:60% ; width: 30%; text-align: center; overflow-y: scroll;
+        }
+        #my_block_list>div
+        {
+            background-color: whitesmoke;
+            width: 80%;
+            margin-left: 10%;
+            height: 3%; border: none; border-radius: 3%; box-shadow:5px 5px 5px whitesmoke;
+            font-size:120%;
+            margin-top: 1%;
+
+             float: top;
+        }
+        form>select
+        {
+            background-color: whitesmoke;
+            width: 80%;
+            border: none;
+            height: 5%;
+            border-radius: 10%;
+            box-shadow: 6px 6px 6px whitesmoke;
+
+        }
+        form>input
+        {
+            background-color: whitesmoke;
+            width: 80%;
+            border: none;
+            height: 5%;
+            border-radius: 10%;
+            box-shadow: 6px 6px 6px whitesmoke;
+
+        }
+        button{
+            background-color: whitesmoke;
+            width: 30%;
+            border: none;
+            height: 5%;
+            border-radius: 10%;
+            box-shadow: 6px 6px 6px whitesmoke;
+            position: absolute;
+            bottom: 5%;
+            right: 35%;
+        }
+        div.tabs
+        {
+
+            position: fixed;top:12%;right: 36%;
+            height:5% ; width: 30%; text-align: center;
+        }
+        div.tabs>.tab
+        {
+            background-color: lightgray;border: none; border-radius: 1.5%; box-shadow: 5px 5px 5px grey;
+            float: right;
+            height: 96%; font-size: 150%;
+            width: 31%; margin-right: 1%;
+            transition: all 0.5s ease;
+        }
+         div.tabs>.tab:hover
+        {
+            background-color: whitesmoke;border: none; border-radius: 1.5%; box-shadow: inset 0 0 5px grey;
+            float: right;
+             margin-right: 1%; cursor: pointer;
+
+        }
+        a {text-decoration: none;color: black}
+         #delete_phot0:hover
+         {
+             cursor: pointer;
+         }
+
+    </style>
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+</head>
+<body style="background-color: whitesmoke;position: relative">
+{% include 'Header.html' %}
+<div class="tabs">
+<a class="tab" id="settings" href="{% url 'update_user_settings' %}">
+    Settings
+</a>
+    <a class="tab" id="profile" href="{% url 'update_user_profile' %}">
+   Profile
+</a>
+    <a class="tab" id="blocked_users" href="{% url 'get_block_list' %}">
+    Blocked users
+</a>
+
+</div>
+{% if title == 'settings' or title == 'profile' %}
+<form method="post" enctype="multipart/form-data"
+      {% if title == 'settings' %}
+      action="{% url 'update_user_settings' %}">
+      {% elif title == 'profile' %}
+      action="{% url 'update_user_profile' %}">
+{% endif %}
+{% csrf_token %}
+
+{% for field in form %}
+    {% if field.label != 'User avatar' %}
+    {{ field.label }}:
+    <br>
+    {{ field }}
+    <br>
+    <br>
+    {% endif %}
+    {% endfor %}
+{% if title == 'profile' %}
+      Profile Picture
+       <br>
+
+<input type="file" name="avatar" accept="image/*" id="id_avatar" style="display: none" onchange="change_profile(this)" >
+
+
+    <br>
+    <div style="position: relative">
+
+<label for="id_avatar">
+
+     <img style="height: 120px;width: 120px;border-radius: 50%;border: none" src="{{ user.get_avatar }}" id="profile_pic" alt="">
+    </label>
+    <img src="/static/WebApp/imgs/rejected.png" style="height: 30px;width: 30px;position: absolute;top:-9%;right: 42%" id="delete_photo"
+    onclick="remove_photo()">
+    </div>
+
+{% endif %}
+
+  <button type="submit">
+      Submit changes
+
+  </button>
+</form>
+    {% else %}
+    <div id="my_block_list">
+       {% for user in users %}
+       <div style="position: relative"  id="{{ user.username }}">
+        {{ user.username }}
+       <button onclick="Unblock_User('{{ user.username }}')"
+               style="position: absolute;right: 0;top:5%;height: 90%;width: 20%;color: whitesmoke;border: none;background-color: red">
+         Unblock
+       </button>
+       </div>
+           {% csrf_token %}
+    {% endfor %}
+    </div>
+{% endif %}
+<script>
+   const tabs=document.getElementsByClassName('tabs')[0].querySelectorAll('.tab');
+   tabs.forEach(tab=>{
+       tab.style.backgroundColor=tab.id ==='{{ title }}'?'grey':'lightgrey';
+   })
+   function change_profile(element)
+   {
+
+      const url= URL.createObjectURL(element.files[0]);
+      document.getElementById('profile_pic').src=url;
+   }
+   function remove_photo()
+   {
+       document.getElementById('profile_pic').src="";
+       var filelist=new DataTransfer();
+       document.getElementById('id_avatar').files=filelist.files;
+       document.getElementById('id_avatar').value="";
+   }
+   function Unblock_User(username)
+   {
+       const frm_data=new FormData();
+       frm_data.append('username',username)
+       console.log(frm_data)
+      const token= document.getElementsByName('csrfmiddlewaretoken')[0].value;
+        $.ajax({
+            type: 'POST',
+            url: '{% url 'unblock_user' %}',
+            data: frm_data,
+            headers: {
+                'X-CSRFToken': token
+            },
+            processData: false,
+            contentType: false,
+            success: function(response) {
+                console.log('Message sent successfully');
+            },
+            error: function(error) {
+                  alert(`couldnt unblock user ${username}`)
+            }
+        }).then(res=>{
+            if (res.status === 'success')
+            {
+                document.getElementById('my_block_list').querySelector('#'+username).remove();
+                 alert(`user ${username} unblocked successfully`);
+
+            }else
+            {
+                alert(`couldnt unblock user ${username}`)
+            }
+            }
+
+        );
+
+       }
+</script>
+</body>
+</html>

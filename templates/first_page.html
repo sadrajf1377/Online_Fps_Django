@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<script>
+    const socket=new WebSocket(
+         'ws://'
+        + '127.0.0.1:8000'
+        + '/ws/private_socekt/'
+
+    );
+    console.log(window.location.host);
+    socket.onopen=function ()
+    {
+        console.log('socket connected !');
+    }
+</script>
+
+</body>
+</html>

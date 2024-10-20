@@ -1,0 +1,218 @@
+{% load poll_extras %}
+<link href="/static/WebApp/stylesheets/user_panel.css" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+<style>
+    .options{overflow-y: scroll;}
+    .drop_down
+    {
+        z-index: 99 !important;
+    }
+</style>
+     <script>
+         function open_close_dropdown(element)
+         {
+
+              const stat=element.getAttribute('data-status')
+             console.log('i was called',stat)
+             const options_dropdown=element.querySelectorAll('.options')[0];
+
+             switch (stat)
+             {
+                 case 'off':
+                 {
+                     options_dropdown.style.height='fit-content';
+                     element.classList.add('option_hover');
+                     element.setAttribute('data-status','on');
+
+                 }break;
+                 case 'on':
+                 {
+                     options_dropdown.style.height='0';
+                     element.classList.remove('option_hover');
+                      element.setAttribute('data-status','off');
+                 }break;
+             }
+
+         }
+         function search_for_users(input)
+         {
+             const name1=input.value;
+
+             $.get('{% url 'Search_For_Users' %}'+'?inp_name='+name1,
+             ).then(res=>{
+                 const users_result=document.getElementById('users_search_result');
+                 users_result.innerText='';
+             for(const user of  res.matching_users)
+             {
+                 const link=`/user_moduleuser_profile/${user}`;
+                users_result.innerHTML+=`<a href="${link}">${user} </a><br>`;
+             }
+             });
+         }
+         function accept_friend_request(username,to_do,object)
+         {
+
+
+            $.ajax({
+             url:`http://127.0.0.1:8000/user_module/accept_friend_request`,
+                type:'GET',
+                data:JSON.stringify([username,to_do]),
+                processData:false,
+                contentType:false
+
+         }).then(res=>{
+             if(res.status === 'success')
+             {
+              object.parentElement.remove();
+             }
+             else
+             {
+                 alert('an error happend');
+             }
+            })
+         }
+         const notifications_list=[];
+         const mysocket=new WebSocket(
+             'ws://'+window.location.host+
+             '/ws/web_socekt/sdsdsd/'
+         );
+         mysocket.onopen=function (){
+             console.log('connected')
+         }
+         mysocket.onclose=function (){
+             console.log('disconnected')
+         }
+         mysocket.onmessage=function (message)
+         {
+                  console.log('i received a message');
+             const notif=document.getElementById('notification_bar');
+             const decode=JSON.parse(message.data)
+             notif.innerText =decode.message;
+             notif.style.right ='0';
+             setTimeout(()=>{notif.style.right='-50%'},2000)
+
+         }
+
+       function remove_friend(username)
+       {
+           const frm_data=new FormData();
+           frm_data.append('username',username);
+           const token=document.getElementsByName('csrfmiddlewaretoken')[0];
+           $.ajax({
+               url:'{% url 'remove_friend' %}',
+               data:frm_data
+               ,type:'POST',
+               headers:{'X-csrftoken':token.value},
+               contentType: false,
+               processData: false
+           })
+       }
+
+     </script>
+
+<div style="width: 200px;height: 50px;position: fixed;right: -50%;top:8%;transition: all 1s ease
+;background-color: whitesmoke;border: none;border-radius: 1%;box-shadow:2px 2px 2px silver;z-index: 5 " id="notification_bar">
+
+</div>
+
+<div class="user_headers" style="float: top;margin-top: 1%;margin-right: 5%;">
+
+ {% csrf_token %}
+    <div onclick="open_close_dropdown(this)"   class="drop_down" data-status="off">
+        Options
+        <br>
+        <div class="options">
+        <div>
+            <a href="{% url 'User_Logout_Web' %}">
+                LogOut
+            </a>
+        </div>
+         <div>
+            <a href="{% url 'update_user_settings' %}">
+                Settings
+            </a>
+        </div>
+            <div>
+            <a href="{% url 'show_my_messages' %}">
+                Messages
+            </a>
+        </div>
+             <div>
+            <a href="{% url 'show_products_web'  %}">
+                Shop
+            </a>
+        </div>
+               <div>
+            <a href="{% url 'My_Products'  %}">
+                My Products
+            </a>
+        </div>
+            <div>
+            <a href="{% url 'show_my_reports'  %}">
+                My Reports
+            </a>
+        </div>
+             <div>
+            <a href="{% url 'show_all_posts'  %}">
+                Show Posts
+            </a>
+        </div>
+
+            </div>
+    </div>
+
+    <div onclick="open_close_dropdown(this)"  class="drop_down" data-status="off">
+        Friends
+        <br>
+        <div class="options" style="z-index: 5">
+        {% for friend in user|get_friends_list:'list' %}
+            <div >
+             {{ friend.username }}
+            <button onclick="remove_friend('{{ friend.username }}')">
+                remove friend
+            </button>
+            </div>
+
+            {% endfor %}
+            </div>
+    </div>
+    <div onclick="open_close_dropdown(this)"  class="drop_down" data-status="off">
+        Top Players
+        <br>
+        <div class="options">
+            {% for player in top_players %}
+        <div>
+            {{ player.username}}
+        </div>
+            {% endfor %}
+
+            </div>
+    </div>
+    <div onclick="open_close_dropdown(this)"  class="drop_down" data-status="off">
+        Friend_Requests
+        <br>
+        <div class="options">
+        {% for req in user.get_friend_requests.friend_request_set.all %}
+            <div>
+             {{ req.sent_by }}
+            <button style="background-color: green;border: none" onclick="accept_friend_request('{{ req.sent_by.username }}','accept',this)">
+                accept
+            </button>
+            <button style="background-color: red;border: none" onclick="accept_friend_request('{{ req.sent_by.username }}','reject',this)">
+                reject
+            </button>
+            </div>
+            {% endfor %}
+            </div>
+
+    </div>
+   <div style="height: 30px;box-shadow: 3px 3px 3px grey;position: relative;float: right;width: 24%;background-color: lightgrey">
+       <input type="text" style="margin-left: 8%;margin-top: 0.25%;border: none;z-index: 1" oninput="search_for_users(this)">
+       <div style="height: fit-content;width:42%;position: absolute;top:110%;left: 8%;background-color: lightgrey;overflow-y: scroll;
+;border: none;box-shadow: 3px 3px 3px grey;outline: none" id="users_search_result">
+
+       </div>
+   </div>
+
+
+</div>

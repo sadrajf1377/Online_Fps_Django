@@ -1,0 +1,84 @@
+<style >
+    form#share_panel
+    {
+        position: fixed; width: 30%;height: 50%;border: none; border-radius: 2%; background-color: transparent;
+        box-shadow: inset 0 0 6px lightgray; right: 35%; top: 25%;overflow-y: scroll; display: none;
+    }
+    form>select>option
+    {
+        width: 100%;float: top; margin-top: 2%;height: 10%;border: none; border-radius: 1%;
+        box-shadow: 5px 5px 5px whitesmoke; background-color: whitesmoke; color: black;
+        text-align: center;
+    }
+    form>select
+    {
+        width: 100%;height: 100%;overflow: hidden;
+    }
+    select:focus
+    {
+        outline: none;
+    }
+</style>
+
+<form id="share_panel">
+    <input type="text" name="post_id" style="display: none" value="">
+    <select multiple id="my_options" name="targets" oninput="change_share_count(this.parentElement)" >
+
+        {% for user in user.user_friends_list.user_list.users.all %}
+          <option  value="{{ user.username }},user"  >
+            {{ user.username }}
+        </option>
+
+        {% endfor %}
+    {% for group in user.my_normal_groups %}
+       <option  value="{{ group.title }},group"  >
+            {{ group.title }}
+        </option>
+    {% endfor %}
+    </select>
+
+ <img src="/static/WebApp/imgs/forward.png" style="position: absolute;bottom: 0;right: 0;width: 50px;height: 50px"
+ onclick="forward_post(this.parentElement)" onmouseenter="this.style.cursor='pointer'">
+  <p style="position: absolute;bottom: 5%;right: 4%;width: 20px;height: 20px;color: whitesmoke;background-color: red
+      ;border-radius: 50%;text-align: center;font-size: 100%" id="share_count">
+      0
+  </p>
+<img src="/static/WebApp/imgs/rejected.png" style="position: absolute;top:0;right: 0;height: 30px;width: 30px"
+onmouseenter="this.style.cursor='pointer'" onclick="open_close_share_form('close')">
+</form>
+<script>
+
+    function change_share_count(element)
+    {
+        console.log('i was called')
+         const elements=element.querySelector('select').querySelectorAll('option');
+         let count=0;
+         elements.forEach((el)=>{if (el.selected)count++});
+        console.log(count)
+         element.querySelector('#share_count').innerText=count.toString();
+    }
+   function forward_post(form)
+   {
+
+        const token=document.getElementsByName('csrfmiddlewaretoken')[0].value;
+         const frm=new FormData(form);
+   const ajax={
+       type:'POST',
+       url:'{% url 'forward_post' %}',
+       data:frm,
+       headers:{'X-csrftoken':token},
+       contentType:false,
+       processData:false
+   }
+   $.ajax(ajax).then(res=>{});
+   }
+   const share_form=document.getElementById('share_panel');
+   function open_close_share_form(to_do,post_id=null)
+   {
+
+       share_form.style.display=to_do=='open'?'block':'none';
+       share_form.querySelector('[name=post_id]').value=post_id;
+
+   }
+
+</script>

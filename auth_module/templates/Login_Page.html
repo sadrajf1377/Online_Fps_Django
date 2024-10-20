@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+<link href="/static/WebApp/stylesheets/login_page.css" rel="stylesheet">
+    <link href="/static/WebApp/javascript/login_page.js" rel="script">
+</head>
+<body >
+
+<form class="login_form" method="post" enctype="multipart/form-data" action="{% url 'User_Login_Web' %}">
+{% csrf_token %}
+    {% for input in form %}
+
+    {{ input.label }}
+      <br>
+        {{ input }}
+        <br>
+        {{ input.errors }}
+
+    {% endfor %}
+<p>
+    Not Signed Up?Sign Up easily <a href="{% url 'User_Signup_Webpage' %}">here</a>
+</p>
+<p>
+    Forgot Password?Recover Passwrd Easily <a href="{% url 'ask_for_pass_reset' %}">here</a>
+</p>
+<button>
+Login
+</button>
+</form>
+</body>
+
+</html>

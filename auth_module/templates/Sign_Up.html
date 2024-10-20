@@ -1,0 +1,33 @@
+
+<!DOCTYPE html>
+<link href="/static/WebApp/stylesheets/signup_page.css" rel="stylesheet" />
+<html lang="en">
+<head>
+
+    <meta charset="UTF-8">
+    <title>Title</title>
+
+</head>
+<body>
+<form method="post" action="{% url 'User_Signup_Webpage' %}">
+{% csrf_token %}
+{% for field in form %}
+{{ field.label }}
+    <br>
+    {{ field }}
+    <br>
+    <p class="error_paragraph">
+    {{ field.errors }}
+    </p>
+{% endfor %}
+password repeat
+<br>
+<input type="password" name="password_repeat">
+<br>
+<br>
+<button>
+Submit
+</button>
+</form>
+</body>
+</html>

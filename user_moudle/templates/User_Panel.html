@@ -1,0 +1,133 @@
+{% load poll_extras %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style>
+        body{
+            font-family: Serif;
+        }
+        .news
+        {
+            height: fit-content;
+
+            width: 70%;
+            background-color: transparent;
+            text-align: center;
+            margin-left:-1%;
+            margin-top: 2%;
+        }
+        .news>div
+        {
+            float: top;  text-align: center;
+            margin-left: 25%;
+
+
+            height: 600px; width: 90%;
+            border: 0.75px solid black; border-radius:0.5%;
+            background-color:transparent; position: relative;
+            box-shadow: 5px 5px 5px #002c33;
+            overflow-x: hidden;
+
+        }
+        .news>div>img.thumbnail
+        {
+            position: absolute; top:0%; right: 0%; width: 100%; height: 81%;
+            border: none; border-radius: 0.5%; box-shadow: inset 0 0 5px whitesmoke;
+            object-fit: cover;
+
+        }
+        .news>div>p
+        {
+            position: absolute;top:76%; width: 100%; height: 19%;
+
+            color: whitesmoke;
+            background-color: transparent;
+            border: none;
+            font-size: 30px;
+               text-align: center;
+               overflow-wrap: break-word;
+            box-shadow: inset 0 0 15px black;
+            overflow-y: hidden;
+
+        }
+        .show_details
+        {
+            background-color: deepskyblue;border: none; border-radius: 2%; color: whitesmoke;
+            height: 50px; width: 150px;
+
+        }
+        button:hover {cursor: pointer}
+    </style>
+    <script>
+        function News_Hover(to_do,news_id)
+        {
+            const parent=document.getElementById(news_id);
+
+            switch (to_do)
+            {
+                case 'open':
+                {
+
+
+                   parent.querySelector('#cover').style.display='block';
+                   parent.querySelector('.show_details').style.right='44%';
+
+                }break;
+                case 'close':
+                {
+
+                   parent.querySelector('#cover').style.display='none';
+
+                   parent.querySelector('.show_details').style.right='-50%';
+
+                }break;
+            }
+        }
+        function open_window(url)
+        {
+            window.open(url,'_self');
+        }
+    </script>
+    </head>
+<body style="background-color: #011d21">
+<div class="welcome" style="float: top">
+    Welcome {{ user.username }}
+</div>
+{% include 'Header.html' %}
+<br>
+<div class="news">
+    {% for new in news %}
+        <br>
+    <div onmouseenter="News_Hover('open',this.id)" onmouseleave="News_Hover('close',this.id)" id="{{ new.title }}">
+     <img src="{{ new.image.url }}" class="thumbnail">
+        <div class="likes" style="position: absolute;bottom: 0;right: 0;height: 50px;width: 70px">
+            <img src="/static/WebApp/imgs/like.png" style="float: right;height: 50%;width: 50%">
+            <p style="float: right;height: 50%;width: 50%;color: whitesmoke;text-align: right">{{ new.likes }} </p>
+        </div>
+        <div class="dislikes" style="position: absolute;bottom: 0;right: 75px;height: 50px;width: 70px">
+            <img src="/static/WebApp/imgs/dislike.png" style="float: right;height: 50%;width: 50%">
+            <p style="float: right;height: 50%;width: 50%;color: whitesmoke;text-align: right">{{ new.dislikes }} </p>
+        </div>
+    <p>
+        {{ new.get_brief }}  more ...
+    </p>
+    <div style="position: absolute;top:0;right: 0;width: 100%;height: 100%;opacity: 50%;
+    display:none;background-color: grey;" id="cover">
+
+    </div>
+    <button style="transition: 0.25s right ease;position: absolute;right:-50%;top:40%" class="show_details" onclick="open_window(
+        '{% url 'show_news_details' new.title %}'
+    )">
+           Details
+        </button>
+    </div>
+    {% endfor %}
+{% for number in paginator.page_range %}
+
+{% endfor %}
+</div>
+</body>
+</html>

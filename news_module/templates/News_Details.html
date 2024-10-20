@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style>
+        .News_Container
+        {
+            height: 1000px;
+            width: 60%;
+            border-radius: 0.5%; border: none; box-shadow: inset 0 0 4px whitesmoke;
+            background-color: transparent;
+            position: relative;
+
+            margin-left: 16%; word-wrap: break-word;
+        }
+        .News_Container>img
+        {
+            position: absolute;
+            height: 73% ; width: 100%; top:2.8%;
+
+        }
+        .News_Container>p
+        {
+            position: absolute; font-family: Serif; color: whitesmoke;
+            background-color: transparent;
+            word-wrap: break-word;
+            height: fit-content ; width: 100%; top:75%;
+            font-size:105%;
+            text-align: left;
+            overflow-y: scroll;
+
+        }
+        .News_Container>b
+        {
+            position: absolute; font-family: Serif; color: whitesmoke;
+            background-color: transparent;
+            word-wrap: break-word;
+            height: 10% ; width: 100%; top:0.5%;
+            text-align: center;
+        }
+        .div_comment
+        {
+            width:60%; height: 150px;
+            float: top; position: relative; margin-left: -5%;
+            border: 0.5px solid black; box-shadow: inset 0px 0px 5px deepskyblue;
+            margin-top: 2%;
+        }
+        .div_comment>img.profile
+        {
+            position: absolute;left: -4%; top: 3%;
+            width:15% ; height: 30%; border: none; border-radius: 0.5%; object-fit:scale-down;
+        }
+        .div_comment>p
+        {
+            position: absolute;left: 0; top: 20%;
+            width:60% ; height: 61%; font-size: calc(1vw + 1vh); background-color: transparent;
+            text-align: left;
+            border: none; border-radius: 1%;
+            word-wrap: break-word;
+            box-shadow: inset 0 0 5px dodgerblue;
+        }
+
+        .div_comment>img.like
+        {
+            position: absolute;right: 0; top: 0%;
+            width:40% ; height: 100%; border: none; border-radius: 0.5%;
+        }
+        form
+        {
+            height: fit-content;
+            width: 55%; box-shadow: inset 0 0 5px cadetblue; border: none; border-radius: 1.5%; text-align: center;
+            background-color: transparent; position: absolute; top: auto; right: 25%;
+            color: whitesmoke; font-family: Serif;
+        }
+         form>textarea
+        {
+            background-color: transparent; color: whitesmoke;
+             border: none; border-radius: 1.5%;
+             box-shadow: inset 0 0 6px blanchedalmond;
+        }
+         .clickable:hover
+         {
+             cursor: pointer;
+         }
+    </style>
+    <script>
+        function like_or_dislike_comment(id,to_do,element)
+        {
+            const frm_data=new FormData();
+            const token=document.getElementsByName('csrfmiddlewaretoken')[0].value;
+            const to_add=element.getAttribute('status') ==='True'?'remove_':'';
+            to_do=to_add+to_do;
+            console.log(to_do+'/'+element.getAttribute('status'));
+            console.log(element.getAttribute('status'));
+            frm_data.append('to_do',to_do); frm_data.append('id',id);
+          //  frm_data.append('to_remove',(to_do ==='like' && element.parentElement.querySelector('[name=dislike]').getAttribute('status')==='True')
+       // ||(to_do ==='dislike' && element.parentElement.querySelector('[name=like]').getAttribute('status')==='True'));
+
+            const to_remove=(to_do ==='dislike' && element.parentElement.querySelector('[name=like]').getAttribute('status')==='True') ||
+                (to_do ==='like' && element.parentElement.querySelector('[name=dislike]').getAttribute('status')==='True');
+            frm_data.append('to_remove',to_remove);
+            $.ajax({
+                type:'POST',
+                url:'{% url 'like_or_dislike_comment' %}',
+                  data:frm_data,
+                headers:{
+                  'X-csrftoken':token
+                },
+                contentType:false,
+                processData:false
+            }).then(res=>{
+                if(res.status ==='success')
+                {
+                     console.log(to_do)
+                    switch (to_do)
+                    {
+                        case 'like':{
+
+                            element.parentElement.querySelector('[name=like]').src='/static/WebApp/imgs/like.png';
+                            if(to_remove){element.parentElement.querySelector('[name=dislike]').src='/static/WebApp/imgs/dislike_transparent.png';}
+                        }break;
+                        case 'dislike':{
+
+                            element.parentElement.querySelector('[name=dislike]').src='/static/WebApp/imgs/dislike.png';
+                            if(to_remove) {
+                                element.parentElement.querySelector('[name=like]').src = '/static/WebApp/imgs/like_transparent.png';
+                            }
+                        }break;
+                        case 'remove_like':{
+
+                            element.parentElement.querySelector('[name=like]').src='/static/WebApp/imgs/like_transparent.png';
+                        }break;
+                        case 'remove_dislike':{
+
+                            element.parentElement.querySelector('[name=dislike]').src = '/static/WebApp/imgs/like_transparent.png';
+                        }break;
+                    }
+                }
+            });
+        }
+        function delete_comment(id)
+        {
+            const frm=new FormData();
+            frm.append('id',id);
+            $.ajax({
+                url:'{% url 'remove_comment' %}',
+                type: 'POST',
+                data:frm,
+                headers:{
+                    'X-csrftoken':document.getElementsByName('csrfmiddlewaretoken')[0].value
+                }
+                ,contentType: false,
+                processData: false,
+            }).then(res=>{
+                if(res.status==='succeed')
+                {
+                    document.querySelectorAll(`#comment${id}`)[0].remove();
+                }
+            })
+        }
+    </script>
+</head>
+<body style="background-color: #002438">
+{% include 'Header.html' %}
+<br>
+<br>
+<br>
+<div class="News_Container">
+
+    <b>
+        {{ news.title }}
+    </b>
+    <img src="{{ news.image.url }}">
+    <p>
+        {{ news.news_text }}
+    </p>
+</div>
+
+<br>
+<div style="margin-left: 30%;float: top">
+{% for comment in comments %}
+    <div class="div_comment" id="comment{{ comment.id }}">
+    <img src="{{ comment.user.get_avatar }}" class="profile">
+    <img src="{% if comment.like_or_dislike == 'like' %}/static/WebApp/imgs/like.png {% elif comment.like_or_dislike == 'dislike' %}
+     /static/WebApp/imgs/dislike.png {% endif %} " class="like" >
+    <p>
+        {{ comment.user.username }} said :
+        <br>
+        {{ comment.comment }}
+        <br>
+        likes:{{ comment.likes }}
+        <br>
+
+    </p>
+    
+
+    {% if comment.i_liked %}
+        <img style="height: 25px;width: 25px;position: absolute;bottom: 0;right: 0;" src="/static/WebApp/imgs/like.png"
+    onclick="like_or_dislike_comment('{{ comment.id }}','like',this)" status="True" name="like">
+        {% else %}
+        <img style="height: 30px;width: 30px;position: absolute;bottom: 0;right: 0;" src="/static/WebApp/imgs/like_transparent.png"
+    onclick="like_or_dislike_comment('{{ comment.id }}','like',this)" status="False" name="like">
+    {% endif %}
+    {% if  comment.i_disliked %}
+    <img style="height: 25px;width: 25px;position: absolute;bottom: 0;right: 26px" src="/static/WebApp/imgs/dislike.png"
+     onclick="like_or_dislike_comment('{{ comment.id }}','dislike',this)" status="True" name="dislike">
+        {% else %}
+        <img style="height: 30px;width:30px;position: absolute;bottom: 0;right: 31px" src="/static/WebApp/imgs/dislike_transparent.png"
+     onclick="like_or_dislike_comment('{{ comment.id }}','dislike',this)" status="False" name="dislike">
+    {% endif %}
+     {% if comment.is_mine %}
+     <img src="/static/WebApp/imgs/rejected.png" style="height: 30px;width: 30px;position: absolute;right: 0;top:0" class="clickable"
+     onclick="delete_comment('{{ comment.id }}')">
+    {% endif %}
+    </div>
+
+{% endfor %}
+<br>
+<form method="post" action="{% url 'comment_on_news' %}" >
+    {% csrf_token %}
+    Send Comment
+    <br>
+    <textarea type="text" placeholder="your comment" name="comment_text"></textarea>
+    <br>
+    Your thoughts:
+    <br>
+    <select name="like_or_dislike">
+        <option value="dislike">
+            Like
+        </option>
+         <option value="dislike">
+            disLike
+        </option>
+    </select>
+    <br>
+    <input style="display: none" type="text" name="parent_news" value="{{ news.title }}">
+    <button>
+        send
+    </button>
+
+</form>
+</div>
+</body>
+</html>

@@ -1,0 +1,43 @@
+
+body
+{
+    background-image: url("/static/WebApp/imgs/UnfoldedRedJaguarundi-max-1mb (1).gif");
+    background-size:100%;
+}
+form
+{
+    margin-left: 35%; margin-top: 4%;
+    height: 65vh; width: 30vw;
+
+     border: none ; border-radius: 2%;
+    color: white;text-align: center;  box-shadow: 5px 5px 25px deepskyblue;
+
+}
+.error_paragraph
+{
+    color: red;
+}
+li
+{
+    list-style: none;
+}
+input
+{
+    width: 80%; border: none; outline: none;
+    height:5%; box-shadow: 4px 4px 4px deepskyblue;
+    border-radius: 2%; opacity: 100;
+    background-color: lightblue;
+}
+select
+{
+    width: 80%; border: none; outline: none;
+    height: 5%; box-shadow: 4px 4px 4px deepskyblue;
+    border-radius: 2%; background-color: lightblue;color: white;
+}
+form>button
+{
+    width: 80%; border: none; outline: none;
+    height: 5%; box-shadow: 4px 4px 4px deepskyblue; color: white;
+    border-radius: 2%; opacity: 100;
+    background-color: lightgreen;
+}

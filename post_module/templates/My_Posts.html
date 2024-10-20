@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style>
+
+        div#posts_container
+        {
+            height: 1000px; width:40%; margin-left: 30%;margin-top: 15%;border: 1px solid gray; border-radius: 1%;
+            box-shadow: 5px 5px 5px lightgray;
+        }
+        div.pst_container
+        {
+            width: 33%;height: 220px;float:left;border: 1px solid lightgray;
+        }
+        #post_detail
+        {
+            position: fixed;right:25%;top:20%;border: none;border-radius: 1%;width: 50%;height: 60%;
+            background-color: whitesmoke; display: none;
+        }
+        #post_detail>#comments
+        {
+            position: absolute;height: 100%;width: 20%;right: 0;border: lightgray 1px solid;border-radius: 1%;top: 0;
+            overflow-y: scroll;
+        }
+        #post_detail>#img_container
+        {
+            position: absolute;height: 100%;width: 79.7%;left: 0;border: lightgray 1px solid;border-radius: 1%;
+        }
+    </style>
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+
+    <script>
+     function fetch(id)
+     {
+         const frm=new FormData(); frm.append('post_id',id)
+         current_post_id=id;
+         const ajax={
+             type:'POST',url:'{% url 'request_post_details' %}',
+             data:frm,processData:false,contentType:false,
+             headers:{'X-csrftoken':token}
+         }
+         console.log(ajax)
+         $.ajax(ajax).then(res=>{
+
+             for(const url of res.result.pictures)
+             {
+                 current_post_pics.push(url);
+
+
+             }
+
+             post_details.querySelector('#img_container').querySelector('img').src=current_post_pics[0];
+              console.log(current_post_pics[0])
+             const comments_parent=post_details.querySelector('#comments');
+             for(const comment of res.result.comments)
+             {
+                 const com=document.createElement('div');
+                 com.style.cssText='width: 99%;height: 10%;border: 1px solid lightgray;float: top;margin-top: 0.5%;';
+                 com.innerHTML=`${comment[0]} said:<br> ${comment[1]}`
+                 comments_parent.appendChild(com);
+             }
+             if(res.result.has_next)
+             {
+                 comments_parent.appendChild(add_comment_button);
+             }
+             else
+             {
+                 comments_parent.parentElement=null;
+             }
+         })
+     }
+     function open_close_post_container(to_do)
+     {
+
+         const is_close=to_do=='open';
+     post_details.style.display=is_close?'block':'none';
+
+     }
+     function clear_details()
+     {
+       //style="width: 99%;height: 10%;border: 1px solid lightgray;float: top;margin-top: 0.5%;"
+         current_post_pics.splice(0,current_post_pics.length,current_post_pics.length)
+         current_post_comments.splice(0,current_post_comments.length,current_post_comments.length)
+         current_post_id=null;
+     }
+     function load_comments()
+     {
+         comment_starting_index+=4;
+         console.log(current_post_id)
+         const frm=new FormData(); frm.append('post_id',current_post_id); frm.append('start',comment_starting_index.toString())
+          const ajax={
+             type:'POST',
+              url:'{% url 'request_post_comments' %}',data:frm,headers:{'X-csrftoken':token},contentType: false,
+              processData: false
+          }
+          $.ajax(ajax).then(res=>{
+               const comments_parent=post_details.querySelector('#comments');
+               add_comment_button.style.display='none';
+               add_comment_button.parentElement=null;
+             for(const comment of res.result)
+             {
+                 const com=document.createElement('div');
+                 com.style.cssText='width: 99%;height: 10%;border: 1px solid lightgray;float: top;margin-top: 0.5%;';
+                 com.innerHTML=`${comment[0]} said:<br> ${comment[1]}`
+                 comments_parent.appendChild(com);
+
+             }
+
+             if(res.has_next)
+             {
+                 add_comment_button.style.display='block';
+                 comments_parent.appendChild(add_comment_button)
+             }
+
+          })
+     }
+    </script>
+</head>
+<body style="background-color: #172a4f">
+<div id="posts_container">
+{% for post in posts %}
+    {% if post.has_pic %}
+<div class="pst_container" onclick="open_close_post_container('open',fetch('{{ post.id }}'))" >
+<img style="height: 100%;width: 100%" src="{{ post.get_thumbnail }}">
+    </div>
+        {% else %}
+        <div class="pst_container" style="background-color: gray" onclick="open_close_post_container('open')" ></div>
+    {% endif %}
+{% endfor %}
+{% csrf_token %}
+
+</div>
+
+
+<div id="post_detail" >
+    <img src="/static/WebApp/imgs/rejected.png" style="height: 50px;width: 50px;position: absolute;top: -5%;right: -5%"
+         onclick="open_close_post_container('close')">
+<div id="comments" >
+
+</div>
+    <div id="img_container">
+      <img style="width: 100%;height: 100%">
+    </div>
+</div>
+<script>
+    const post_details=document.getElementById('post_detail')
+    const current_post_pics=[];
+    const current_post_comments=[];
+    let comment_starting_index=0;
+    const add_comment_button=document.createElement('img');
+    add_comment_button.src='/static/WebApp/imgs/plus.png'; add_comment_button.style.cssText='width:25%;height:50px;margin-left:37.5%';
+    add_comment_button.addEventListener('click',load_comments);
+    const token=document.querySelector('[name=csrfmiddlewaretoken]').value;
+    let current_post_id=null;
+</script>
+</body>
+</html>

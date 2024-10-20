@@ -1,0 +1,90 @@
+<style>
+#right_side_bar
+{
+    position: fixed;width: 3%; right: -0.15%; height: 300px;top:33%;background-color: lightgray;border-radius: 3%;
+}
+#right_side_bar>div.options
+{
+    height: 15%;float: top; border-bottom: 0.5px solid gray;margin-top: 20%;width: 100%;
+}
+
+#search_panel
+{
+    position: fixed;width: 8%; right: -25%; height: 300px;top:33%;background-color:lightgray;border-radius: 3%;box-shadow: inset 0 0 5px gray;
+    transition: all 0.5s ease; z-index: -1;
+}
+input[type=text]:focus
+{
+    outline: none;
+}
+</style>
+<script>
+
+    function open_close_search()
+    {
+       const is_open=search_panel.getAttribute('is_open')=='true';
+       search_panel.style.right=is_open?'-25%':'2.75%';
+       search_panel.setAttribute('is_open',is_open?'false':'true');
+    }
+    function hover(element){
+        element.style.cursor='pointer';
+    }
+    function search_for_users(input)
+    {
+        const name1=input.value;
+
+             $.get('{% url 'Search_For_Users' %}'+'?inp_name='+name1,
+             ).then(res=>{
+                 const users_result=input.parentElement.querySelector('#matching_users');
+                 users_result.innerHTML='';
+             for(const user of  res.matching_users)
+             {
+                const url='http://127.0.0.1:8000/user_module/user_profile/'+user[0]+'/posts';
+
+                users_result.innerHTML+=`   <a href=${url}
+class="result" style="width: 90%;height:46px;box-shadow: inset 0 0 5px gray;color: black;float: top;margin-top: 2%
+;margin-left: 5%;box-shadow: inset 0 0 6px">
+                 <img src=" ${user[1]}" style="height:45px;width: 45px;margin-left: 0;float: left;border-radius: 50%">
+                    <p style="float: left;font-size: calc(5vh+ 5vw);margin-left: 5%">
+                        ${user[0]}
+                    </p>
+        </a>`;
+             }
+             });
+    }
+
+</script>
+<div id="right_side_bar">
+<div class="options" onmouseenter="hover(this)">
+    <img src="/static/WebApp/imgs/home.png" style="height: 90%;width: 80%;margin-left: 10%;margin-bottom: 5%">
+</div>
+    <div class="options" onmouseenter="hover(this)">
+    <img src="/static/WebApp/imgs/explore_icon.png" style="height:90%;width: 80%;margin-left: 10%;margin-bottom: 5%">
+</div>
+    <div class="options" onmouseenter="hover(this)" onclick="open_close_search()">
+    <img src="/static/WebApp/imgs/search_icon.png" style="height:90%;width: 80%;margin-left: 10%;margin-bottom: 5%">
+
+</div>
+    <div class="options" onmouseenter="hover(this)" onclick="window.open('{% url 'create_post' %}')">
+        New post
+    </div>
+      <div class="options" onmouseenter="hover(this)" onclick="window.open('{% url 'show_my_posts' %}')">
+        My posts
+    </div>
+
+
+</div>
+<div id="search_panel" data-is_open="false">
+     <input
+             oninput="search_for_users(this)"
+             type="text" style="width: 90%;border-radius: 5%;margin-left: 4.1%;margin-top:3%;background-color: gray;border: none">
+    <br>
+    <div id="matching_users" style="margin-bottom: 2%;height:85%;color: whitesmoke;overflow-y: scroll ">
+
+
+    </div>
+
+    </div>
+<script>
+    const search_panel=document.getElementById('search_panel');
+</script>

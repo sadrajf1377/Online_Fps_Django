@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style>
+        #posts_container
+        {
+            position: absolute;top:30%;width: 50%; right: 25%; height: fit-content;
+            background-color: transparent; box-shadow: inset 0 0 7px lightgray;border: none; border-radius: 1.5%;
+
+        }
+        .post
+        {
+            margin-top: 5%; margin-left: 5%;width: 90%;height: fit-content; border: none; border-radius: 1%;
+            box-shadow: inset 0 0 5px lightgray; background-color: whitesmoke;
+        }
+        .post_profile_section
+        {
+            height:56px;width: 100%; float: top;
+        }
+        .post_profile_section>img
+        {
+            float: left;border-radius: 50%; border: none; object-fit: cover;
+            height: 50px;width: 50px;
+        }
+        .post_profile_section>p
+        {
+            float: left;
+        }
+        div.post_image
+        {
+            float: top; width: 96%; margin-left: 2%;  margin-top: 0.45%;
+        }
+        div.impression
+        {
+            float: top;height: 56px; width: 100%; margin-left: 2%;
+        }
+        div.impression>img
+        {
+            float: left;margin-left: 1%; height: 50px;width: 50px; object-fit: cover;
+        }
+        div.post_caption
+        {
+            float: top;height: 30%;width: 95%; margin-left: 2.5%; text-align: left;font-size: 100%;
+            word-wrap: break-word; color: black;border-radius: 1%; margin-top: 1.5%;
+        }
+        #comment_form
+        {
+            width: 100%; height: 100%;
+        }
+        #comment_form>textarea
+        {
+         resize: none; width:90%; height:40px; margin-left: 2.5%;
+        }
+
+
+    </style>
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+    <script>
+
+        const urls=[];
+        let index=0;
+        function add_image(url)
+        {
+            urls.push(url);
+        }
+        function change_index(to_do=null)
+        {
+            const img=document.getElementById('main_picture');
+
+            switch (to_do)
+            {
+                case '+':{if(index+1<urls.length){index+=1;} }break;
+                case '-':{if(index-1>=0){index-=1;} }break;
+                default :{}break;
+            }
+            img.src=urls[index];
+
+        }
+
+        function send_comment(frm)
+        {
+
+            const token=frm.querySelector('[name=csrfmiddlewaretoken]').value;
+
+            const data=new FormData(frm);
+            const has_parent=data.get('parent_comment') !='';
+            var container=frm.parentElement.parentElement.querySelector('.comments_container');
+            console.log(container)
+
+            if(has_parent)
+            {
+                container=container.querySelector(`#comment${data.get('parent_comment')}`);
+            }
+            const ajax1={
+                url:'{% url 'write_a_comment' %}'
+            ,type:'POST',
+                data:data,
+                headers:{'X-csrftoken':token},
+                contentType:false,
+                processData:false
+            }
+            $.ajax(ajax1).then(res=>{
+
+                if(res.status=='success')
+                {
+
+                    const comment=document.createElement('div'); comment.style.cssText='float: top;margin-top: 3%;width: 98%;height: 30%;' +
+                    `margin-left:${has_parent?'3%':'1%'};border: 1px solid lightgray`;
+                    comment.innerHTML=`${res.username} said <br> ${res.message} `
+
+
+
+                    container.appendChild(comment);
+
+
+
+                }
+            })
+        }
+         function change_like(img_element)
+         {
+             const post_title='{{ post.title }}';
+             const is_liked=img_element.getAttribute('data-like');
+             const frm=new FormData(); frm.append('post_title',post_title); frm.append('is_liked',is_liked);
+             const token=document.getElementById('comment_form').querySelector('[name=csrfmiddlewaretoken]').value
+             const ajax={
+                 type:'POST',
+                 url:'{% url 'add_remove_like' %}',
+                 data:frm,
+                 headers:{'X-csrftoken':token},
+                 contentType: false,processData: false
+             }
+             $.ajax(ajax).then(res=>{
+                 console.log(res.status)
+                 if(res.status=='succeed')
+                 {
+
+                     if(is_liked=='1')
+                     {
+                         img_element.setAttribute('data-like','0')
+                         img_element.src='/static/WebApp/imgs/like2.png';
+                     }
+                     else
+                     {
+                          img_element.setAttribute('data-like','1')
+                         img_element.src='/static/WebApp/imgs/like.png';
+                     }
+                 }
+             })
+             console.log(img_element.getAttribute('data-like'))
+         }
+         function set_reply_parent(parent_id=null,username=null)
+         {
+             console.log('i was called')
+             const comment_form=document.getElementById('comment_form');
+             if(parent_id==null)
+             {
+                comment_form.querySelector('#id_parent_comment').querySelector('option').value="";
+                const el=comment_form.querySelector('#reply_to')
+                 el.style.display='none';
+             }
+             else
+             {
+                   comment_form.querySelector('#id_parent_comment').querySelector('option').value=parent_id;
+                 const el=comment_form.querySelector('#reply_to')
+                 el.style.display='block';
+                     el.innerText=`Replying to ${username}`;
+             }
+         }
+         function delete_comment(id,element)
+         {
+             const frm=new FormData(); frm.append('id',id);
+             const token=document.getElementById('comment_form').querySelector('[name=csrfmiddlewaretoken]').value;
+             const ajax={url:'{% url 'delete_comment' %}', type:'POST',headers:{'X-csrftoken':token},data:frm,contentType:false,processData:false}
+             $.ajax(ajax).then(res=>{
+                 if(res.status=='succeed')
+                 {
+                     element.remove();
+                 }
+                 else
+                 {
+                     alert('couldnt delete this comment')
+                 }
+             })
+         }
+
+    </script>
+</head>
+<body style="background-color: #172a4f">
+<div id="posts_container">
+
+        {% for image in post.post_images_set.all %}
+            <script>
+              create_post('{{ post.id }}','{{ image.picture.url }}')
+            </script>
+            {% endfor %}
+    <div class="post">
+    <div class="post_profile_section">
+        <img src="{{ post.author.avatar.url }}" alt="" >
+        <p>
+            {{ post.author.username }}
+            <br>
+            {{ post.creation_date }}
+
+        </p>
+
+        </div>
+        <div class="post_image" style="position: relative">
+        <img alt="" src="" style="height: 650px;width: 100%;border: 2px solid lightgray;object-fit: fill" id="main_picture">
+            <button style="position: absolute;right: 0;top:40%" onclick="change_index('+')">
+                Next
+            </button>
+            <button style="position: absolute;left: 0;top:40%" onclick="change_index('-')">
+                Previous
+            </button>
+        </div>
+
+      <div class="impression">
+      {% with post.post_like_list.users as users %}
+           {% if user in users.all  %}
+          <img src="/static/WebApp/imgs/like.png" data-like="1"
+                  onmouseenter="this.style.cursor='pointer'" onclick="change_like(this,'{{ post.title }}','{{ post.i_liked }}')">
+          {% else %}
+          <img src="/static/WebApp/imgs/like2.png" data-like="0"
+                  onmouseenter="this.style.cursor='pointer'" onclick="change_like(this,'{{ post.title }}','{{ post.i_liked }}')">
+          {% endif %}
+          <img src="/static/WebApp/imgs/share.png" onclick="open_close_share_form('open','{{ post.id }}')">
+          <br>
+          <p>{{ users.all.count }} likes </p>
+       {% endwith %}
+      </div>
+
+
+     <div class="post_caption">
+         {{ post.caption }}
+     <br>
+     {% for tag in post.hash_tag_set.all %}
+         <a href="{% url 'view_posts_by_hashtags' tag.title %}">
+          #{{ tag.title }} &nbsp
+         </a>
+         {% endfor %}
+         <br>
+
+
+        <div style="width: 100%;position: relative;height: 300px;overflow-y: scroll" class="comments_container" >
+         {% for comment in comments %}
+             <div style="float: top;margin-top: 3%;width: 98%;height: 30%;margin-left:1%;border: 1px solid lightgray;position: relative" id="comment{{ comment.id }}">
+             {{ comment.written_by.username  }} said :
+               <br> {{ comment.comment_text}}
+                 {% if comment.written_by.id == user.id %}
+                  <img src="/static/WebApp/imgs/rejected.png" style="height: 40px;width: 40px;position: absolute;right: 0;top: 0"
+                  onclick="delete_comment('{{ comment.id }}',this.parentElement)">
+                 {% endif %}
+             <br> <p onclick="set_reply_parent('{{ comment.id }}','{{ comment.written_by.username  }}')"> Reply To</p>
+             </div>
+
+             {% endfor %}
+        <br>
+        <div style="text-align: center">
+          {% for page in paginator.page_range %}
+            <a href="?page={{ page }}" style="float: left">
+            {{ page }}
+            </a>
+            {% endfor %}
+        </div>
+     </div>
+     <br>
+        <div class="form_container" >
+          <form id="comment_form" style="position: relative">
+  {% csrf_token %}
+    {% for field in form %}
+        {% if field.label == 'main_text' %}
+    {{ field.label }} : <br> {{ field }}
+        {% endif %}
+
+    {% endfor %}
+<select name="parent_post" id="id_parent_post" style="display: none">
+        <option  selected value="{{ post.id }}" ></option>
+        </select>
+<select name="written_by" id="id_written_by" style="display: none">
+        <option selected value="{{ user.id }}" ></option>
+        </select>
+<select name="parent_comment" id="id_parent_comment" style="display: none">
+        <option selected value="" >
+
+        </option>
+        </select>
+<button style="" onclick="event.preventDefault(),send_comment(this.parentElement)">
+Send
+</button>
+<div id="reply_to" style="position: absolute;top:-9%;left: 5%;display: none">
+      <img src="/static/WebApp/imgs/rejected.png" style="height: 25px;width: 25px" onclick="set_reply_parent()">  Reply To
+</div>
+</form>
+        </div>
+        </div>
+
+
+    </div>
+        <script>
+            change_index('{{ post.id }}');
+        </script>
+
+
+</div>
+{% include 'Right_Side_Bar.html' %}
+{% include 'Post_Share_Panel.html' %}
+</body>
+</html>

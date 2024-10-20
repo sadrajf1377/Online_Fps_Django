@@ -1,0 +1,36 @@
+body
+{
+background-color: cornflowerblue;
+}
+form
+{
+    height: 25%; width: 15%;
+    position:absolute;top: 30%; right: 45%;
+    border: none; border-radius: 2%; box-shadow: 6px 6px 6px deepskyblue;
+    background-color: dodgerblue;
+    text-align: center;
+    color: white;
+}
+input
+{
+    width: 80%; height: 10%;
+    color: black;
+
+}
+input.login_input:focus
+{
+    outline: 3px blue;
+}
+form.login_form>button
+{
+    height: 15%;
+    width: 50%;
+    color: white;
+    border: none; background-color: lightgreen; border-radius: 3%;
+    position: absolute; bottom: 5%;right:24%; box-shadow: 3px 3px 3px lightgreen;
+}
+ul>li
+{
+    list-style: none;
+
+}

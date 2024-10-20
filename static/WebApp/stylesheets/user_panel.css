@@ -1,0 +1,60 @@
+.user_headers
+{
+    background-color: lightgray;
+    width: 100%;
+    height: fit-content;
+
+}
+.user_headers>div.drop_down
+{
+    float: right;
+    background-color: lightgrey;
+    width: 19%;
+    height: 30px;
+    border-right: 2px solid black;
+    font-size: 100%;
+    text-align: center;
+    border: none; border-radius: 1%; box-shadow: 3px 3px 3px grey;
+    font-family: "Andale Mono";
+    position: relative;
+    transition: all 0.5s ease;
+}
+div.drop_down:hover
+{
+    background-color: grey;
+    cursor: pointer;
+    box-shadow: inset 0 0 20px lightgrey;
+
+}
+div.welcome
+{
+    text-align: center;
+    background-color: lightgrey; border: none; border-radius: 1%; box-shadow: 3px 3px 3px grey;
+    font-size: 100%;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", ui-system, sans-serif;
+}
+.options
+{
+    height: 0;
+    overflow: hidden;
+    width: 100%;
+    transition: height 1s ease;
+    position: absolute;
+    top:110%;
+}
+div.options>div
+{
+    float: top;
+    height: 30%;
+    width: 100%;
+    border-bottom: 1px solid black;
+    text-align: center;
+    background-color: gray; box-shadow: 3px 3px 3px gray;  border-radius: 1.5%;
+
+}
+a
+{
+    text-decoration: none;
+    color: white;
+}
+

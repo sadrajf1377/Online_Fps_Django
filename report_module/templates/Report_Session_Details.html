@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style>
+      textarea{
+          background-color: gray;border: none; outline: none; border-radius: 1%;
+          color: whitesmoke;resize: none; width: 60%; height: 25%;
+          box-shadow: inset 0 0 6px darkgreen;
+      }
+      form
+      {
+          color: whitesmoke;background-color: transparent;border: none; border-radius: 1%; box-shadow: inset 0 0 8px darkseagreen;
+          position: fixed;bottom: -40%;width: 40%;right: 30%;height: 40%; text-align: center;
+          font-size: calc(1vh + 1vw);transition: bottom 2s ease;
+      }
+      input[type=file]
+      {
+          width: 40%; height: 8%; color: whitesmoke; background-color: gray;border: none; border-radius: 1%;
+           box-shadow: inset 0 0 6px darkgreen;
+      }
+      #reports_container
+      {
+          position: absolute;top: 10%;width: 45%; right: 27.5%; height: 50%; overflow-y: scroll;
+          background-color: transparent; border: none; border-radius: 1%; box-shadow: inset 0 0 6px cadetblue;
+
+      }
+      .reply
+      {
+          width: 80%;  margin-top: 5%; margin-left: 16%; height: fit-content; background-color: cadetblue; color: whitesmoke;
+          border: none; border-radius: 1%; box-shadow: 3px 3px 3px cadetblue;
+      }
+      .report
+      {
+          width: 80%; margin-left: 1%;margin-top: 5%; height: fit-content; background-color: cadetblue; color: whitesmoke;
+          border: none; border-radius: 1%; box-shadow: 3px 3px 3px cadetblue;
+      }
+
+    </style>
+    <script>
+        var form_open=false;
+
+        function show_or_hide_form()
+        {
+            const report_form=document.getElementById('report_form');
+        const frm_button=document.getElementById('form_button');
+                form_open=!form_open;
+            if(form_open)
+            {
+                 report_form.style.bottom='-40%';
+                 frm_button.style.bottom='0%';
+            }
+            else
+            {
+              report_form.style.bottom='0%';
+              frm_button.style.bottom='40%';
+            }
+        }
+        function fill_report(form)
+        {
+            const token=form.querySelector('[name=csrfmiddlewaretoken]').value;
+            const frmdata=new FormData(form);
+            console.log(token)
+            $.ajax({
+                type:'POST',
+                url:'{% url 'fill_report' %}',
+                data:frmdata,
+                headers:{'X-csrftoken':token},
+                contentType:false,
+                processData:false
+            }).then(res=>{
+                if(res.status=='success')
+                {
+                  window.open(window.location,'_self');
+                }
+                else
+                {
+                    alert('an error happend !')
+                }
+            })
+        }
+        function delete_report(report_id)
+        {
+            const token=document.getElementById('report_form').querySelector('[name=csrfmiddlewaretoken]').value;
+            const frm_data=new FormData();
+            frm_data.append('id',report_id);
+          //  console.log(document.getElementById('reports_container').querySelector(`#report${report_id}`));
+            $.ajax(
+                {
+                    url:'{% url 'delete_report' %}',
+                    type:'POST',
+                    data:frm_data,
+                    headers:{'X-csrftoken':token},
+                    contentType: false,
+                    processData: false
+                }
+            ).then(res=>{
+                if(res.status=='success')
+                {
+                    const el=document.getElementById('reports_container').querySelector(`#report${report_id}`);
+                    el.remove();
+                }
+            })
+        }
+
+    </script>
+</head>
+<body style="background-color: #012d36">
+{% include 'Header.html' %}
+
+<div id="reports_container">
+    {% for message in messages %}
+        <div id="report{{ message.id }}">
+    <div class="report" style="position: relative">
+
+       You said : <br> {{ message.main_text }} <br> {{ message.creation_date }}
+
+    <img style="position:absolute;top:0;right: 0;height: 30px;width: 30px" src="/static/WebApp/imgs/rejected.png"
+    onclick="delete_report('{{ message.id }}')">
+
+    </div>
+        {% for reply in message.report_set.all %}
+            <div class="reply">
+            Support  said : <br> {{ reply.main_text }} <br> {{ reply.creation_date }}
+    </div>
+            {% endfor %}
+        </div>
+    {% endfor %}
+</div>
+
+
+
+<form id="report_form">
+{% csrf_token %}
+{% for field in form %}
+    {% if field.name != 'report_session' %}
+    {{ field.label }} <br> {{ field }} <br>
+    {% endif %}
+
+    {% endfor %}
+ <button style="margin-bottom: 0%;width: 40%;height: 20%;margin-right: 30%;background-color:lightgreen
+;border: none;border-radius: 1%;box-shadow: 4px 4px 5px lightgreen" onclick="event.preventDefault();fill_report(this.parentElement)">
+ Submit
+ </button>
+<select name="report_session" id="id_report_session" style="display: none">
+    <option selected value="{{ session_id }}">
+
+    </option>
+</select>
+</form>
+<img id="form_button" onclick="show_or_hide_form()" onmouseenter="this.style.cursor='pointer'"
+        src="/static/WebApp/imgs/options.png" style="height: 5%;width: 2%;position: fixed;right:48%;bottom: 0%;transition: bottom 2s ease ">
+<div style="position: absolute;top:62%;width: 20%;right: 40%;height: 2%
+;background-color: transparent;box-shadow: inset 0 0 2px lightgray;border: none;border-radius: 1%">
+    {% for number in paginator.page_range %}
+       <a href="?page={{ number }}" style="float: left;margin-left: 2%;
+border: none;border-radius: 1%;box-shadow: inset 0 0 5px lightgray;height: 90%;width: 5%;text-align: center">
+       {{ number }}
+       </a>
+    {% endfor %}
+</div>
+</body>
+</html>

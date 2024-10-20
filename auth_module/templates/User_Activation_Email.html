@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style>
+        .content_container
+        {
+            height: 60%; background-color: grey; box-shadow: 5px 6px 6px lightgrey; color: black;
+            border: none; border-radius: 1%;
+            width: 60%;
+           text-align: center;position: absolute;
+            top:17%;right: 23%;font-family: Consolas, Monaco, Lucida Console, Liberation Mono, DejaVu Sans Mono, Bitstream Vera Sans Mono, Courier New, monospace;
+            color: whitesmoke; font-size: 100%;
+        }
+        .image_container>img
+        {
+            height: 150px;width: 150px; position: absolute; right: 43%;
+            margin-left: 50%;border-radius: 50%;border: none;
+        }
+        .image_container
+        {
+            width: 60%;
+            height: 16%; background-color: lightgrey; box-shadow: 5px 6px 6px grey; color: black;
+            border: none; border-radius: 1%;
+            position: absolute;
+            top:0%;right: 23%;
+
+           text-align: center;
+        }
+        .content_container>p
+        {
+            margin-left: 2%;
+        }
+         .content_container>a
+        {
+            margin-left: 2%;
+        }
+    </style>
+</head>
+<body >
+<div class="image_container">
+
+    <img src="https://img.freepik.com/free-vector/hand-drawn-gaming-logo-template_23-2150730869.jpg">
+</div>
+
+<div class="content_container">
+
+
+   <p> Hello Dear {{ username }} </p>
+    <p>
+    We are Glad THat you Decicded to Join us
+    please,to activate your account,click the link down Below
+        </p>
+    <a href="http://127.0.0.1:8000/Activate_user/{{ act_code }}">
+        Activate
+    </a>
+      <p>
+    Game Corporation
+          <br>
+          uS,Washgington
+        </p>
+</div>
+</body>
+</html>

@@ -1,0 +1,220 @@
+
+{% load poll_extras %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style>
+        tr
+        {
+            margin-top: 10%;
+        }
+        html
+        {
+            font-family: Sans-Serif;
+            font-weight: 700;
+            color: whitesmoke;
+        }
+        #user_options:hover
+        {
+            cursor: pointer; color: red;
+        }
+        #report_form
+        {
+            position: fixed; height: 25%; width: 10%; border: none; border-radius: 1%; background-color: transparent;
+ box-shadow: inset 0 0 10px lightblue;            transition: all 1s ease;
+            top:150%; right: 50%;
+            text-align: center;
+        }
+        #report_form>select
+        {
+             height: 25%; width: 100%; border: none; border-radius: 1%; background-color: lightgray;
+ box-shadow: inset 0 0 10px lightblue;
+            text-align: center; color: whitesmoke;
+        }
+        #report_form>select>option
+        {
+             height: 45%; width: 100%; border: none; border-radius: 1%; background-color: lightblue; color: whitesmoke;
+ box-shadow: inset 0 0 10px lightblue;
+            text-align: center;
+        }
+
+
+    </style>
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+    <script>
+
+        function open_user_options()
+        {
+            console.log('i was clicked')
+            const user_options=document.getElementById('user_options');
+            const options_dropdown=user_options.parentElement.querySelector('div');
+            if(options_dropdown.style.height === '200px')
+            {
+                user_options.style.rotate='0deg';
+                options_dropdown.style.height='0';
+
+            }
+           else
+            {
+                user_options.style.rotate='90deg';
+                options_dropdown.style.height = '200px';
+            }
+        }
+        function send_friend_request(username)
+        {
+
+            $.ajax({
+                url:`http://127.0.0.1:8000/user_modulesend_friend_request/${username}`,
+                type:'GET',
+                processData: false,
+                contentType:false,
+                success:function (){console.log('success')},
+                error:function (e){console.log(e)}
+            }).then(res=>{
+                console.log(res.status)
+                if(res.status === 'succeed')
+                {
+                 mysocket.send(JSON.stringify({
+                     'to_do':'send_notif','target_user':'{{ target_user.username }}'
+                 }))
+                }
+            })
+        }
+        function show_or_hide_report_form(to_do)
+        {
+            const rep_form=document.getElementById('report_form');
+
+            if(to_do === 'show')
+            {
+                rep_form.style.display='block';
+               rep_form.style.top='20%';
+            }
+            else
+            {
+
+               rep_form.style.top='150%';
+               setTimeout(()=>{rep_form.style.display='none';},1000)
+            }
+        }
+    </script>
+
+<body>
+{% include 'Header.html' %}
+<div style="background-size:100%;width: 100%;height: 150px;background-image: url('/static/WebApp/imgs/city000.gif');float: top;box-shadow: inset 0 0 50px black ">
+
+</div>
+{% if status != '404' %}
+<div style="overflow: visible;
+background-color: grey;border-radius: 2%;float: top;margin-top: -2%;height: 100px;width: 40%;margin-left: 30%;box-shadow: 10px 10px 10px grey;position: relative">
+    <div style="position:absolute;top:0%;right: 0;height: 100%;width: 10%">
+        <img src="/static/WebApp/imgs/options.png"
+             style="height: 30px;width: 30px;position: absolute;right: 0;
+             transition: 0.75s all ease" id="user_options" onclick="open_user_options()">
+        <div style="overflow: hidden;
+        height: 0;width: 50px;background-color: lightgrey;position: absolute;
+        right: -10%;top:30%;border-radius: 5%;border: none;color: black;text-align: center;transition: 0.25s all ease;">
+            <form action="{% url 'block_user' %}" method="post">
+                <input type="text" style="display: none" value="{{ target_user.username }}" name="username">
+                {% csrf_token %}
+            <button type="submit" >Block This User </button>
+                </form>
+              <hr>
+           <a href="#" onclick="send_friend_request('{{ target_user.username }}')">Send Friend Request </a>
+            <hr>
+            <a onclick="show_or_hide_report_form('show')">
+                Report
+            </a>
+        </div>
+    </div>
+
+<img src="{{ target_user.get_avatar }}" style="height: 90px;width: 90px;border: none;border-radius: 50%;margin-left: 5%;float: left;margin-top: 0.5%">
+    <p style="float:left;margin-left: 1%;">
+
+       {{ target_user.username }}
+    </p>
+
+        <div style="float: left;height: fit-content;width: fit-content;text-align: center;margin-left: 22%">
+            <br>
+            Friends
+            <br>
+            {{ target_user | get_friends_list:'count' }}
+        </div>
+        <div style="float: left;height: fit-content;width: fit-content;margin-left: 2%;text-align: center">
+            <br>
+            Rank
+            <br>
+            {{ target_user.user_ranking }}
+        </div>
+    <div style="float: left;height: fit-content;width: fit-content;margin-left: 2%;text-align: center">
+        <br>
+        Total Score
+        <br>
+        {{ target_user.user_total_score }}
+    </div>
+
+</div>
+    <div style="margin-left: 40%;margin-top: 2%" id="hc">
+     <a href="{% url 'show_user_profile' target_user.username 'posts' %}"
+
+             style="float: left;box-shadow: inset 0 0 1px gray;margin-left: 1%;color: black;height: 46px;width: 160px;
+     font-size:30px;text-align: center;background-color: whitesmoke" id="posts">
+         Posts
+     </a>
+    <a href="{% url 'show_user_profile' target_user.username 'comments' %}"
+            style="float: left;box-shadow: inset 0 0 1px gray;margin-left: 1%;color: black;height: 46px;width: 160px;
+     font-size:30px;text-align: center;background-color: whitesmoke " id="comments">
+         Comments
+     </a>
+
+    </div>
+
+    {% if status == 'unlocked' %}
+    <div style="float: top;margin-top: 2%">
+    <script>
+     const hc=document.getElementById('hc');
+     const type='{{ type }}';
+     hc.querySelector(`#${type}`).style.backgroundColor='lightgray';
+    </script>
+    <div style="margin-top: 6%;margin-left: 20%;width: 60%;height: 1000px;border: none;border-radius: 1%;background-color: transparent;
+box-shadow: inset 0 0 2px darkseagreen">
+    {% if type == 'posts' %}
+    {% for obj in posts %}
+    <div style="background-color: whitesmoke;width: 80%;margin-left: 10%;margin-top: 2%;border: none;border-radius: 0.5%;
+height: 100px;color: black">
+       {{ obj.title }}
+    </div>
+    {% endfor %}
+        {% else %}
+        {% for obj in posts %}
+        <div style="background-color: whitesmoke;width: 80%;margin-left: 10%;margin-top: 2%;border: none;border-radius: 0.5%;
+height: 100px;color: black">
+       {{ obj.comment_text }}
+    </div>
+        {% endfor %}
+        {% endif %}
+    </div>
+
+    </div>
+        {% else %}
+        Fuck off!
+        {% endif %}
+    {% else %}
+    <div style="text-align: center;font-size: calc(2vw + 2vh);position: fixed;top:50%;right: 50%">
+     Sorry!This Page Doesn't Exist!
+    </div>
+{% endif %}
+<form id="report_form" action="{% url 'submit_report' %}" method="post">
+{% csrf_token %}
+{% for field in report_form %}
+{{ field.label }}:
+    <br>
+    {{ field }}
+{% endfor %}
+<button style="background-color: green;color:whitesmoke; border: none;border-radius: 1.5%">
+    Submit
+</button>
+</form>
+</body>
+</html>
