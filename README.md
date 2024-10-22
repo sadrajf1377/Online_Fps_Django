@@ -1,4 +1,5 @@
 Hi,to use this project,run the django project on the machine that is going to be the host server,in the settings.py include the host mchines ip in the allowed_hosts array,then in the unity project,change every https://127.0.0.1 to the host machine's ip address,also make sure that
 your firewall doesnt block any traffic from the unity app or the django app.the minimum players required to start a match is 2 players.if you want to change that,go to my_functions.py in utils directory,in 86th line,change the required amount to your desired value
 this app also has news_system,authentication system,posting and commenting system and a simple shopping system,feel free to try them out.
-also to create an admin user,simply write python manage.py createsuperuser to access the django's default admin panle.
+also to create an admin user,simply write python manage.py createsuperuser to access the django's default admin panel.
+to play with other users,make sure that you and them are in the same network,and have the same pc as your hosts,then after logging in,click the play button and enter the room name that you all want to play in.
